@@ -1,11 +1,39 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Spin, Card, Button, Space, Typography, Row, Col, Alert, Tag, Divider, message } from "antd";
+import { Spin, Card, Button, Space, Typography, Row, Col, Alert, Tag, Divider, message, Skeleton } from "antd";
 import { ReloadOutlined, EnvironmentOutlined, NumberOutlined, ClockCircleOutlined } from "@ant-design/icons";
 // import "./bus.css";
 // import "./busstop.css";
 
 const { Title, Text } = Typography;
+
+// Helper function to calculate minutes difference from current time
+const calculateMinutesFromNow = (targetTime, currentTime) => {
+  if (!targetTime || !currentTime) return null;
+  
+  try {
+    // Parse time strings (format: "HH:MM:SS")
+    const [targetHour, targetMinute, targetSecond] = targetTime.split(':').map(Number);
+    const [currentHour, currentMinute, currentSecond] = currentTime.split(':').map(Number);
+    
+    // Convert to total minutes since midnight
+    const targetTotalMinutes = targetHour * 60 + targetMinute + targetSecond / 60;
+    const currentTotalMinutes = currentHour * 60 + currentMinute + currentSecond / 60;
+    
+    // Calculate difference in minutes
+    let diffMinutes = Math.round(targetTotalMinutes - currentTotalMinutes);
+    
+    // If the time is for tomorrow (negative difference), add 24 hours
+    if (diffMinutes < 0) {
+      diffMinutes += 24 * 60;
+    }
+    
+    return diffMinutes;
+  } catch (error) {
+    console.error("Error calculating time difference:", error);
+    return null;
+  }
+};
 
 function BusStopList() {
   const [searchParams] = useSearchParams();
@@ -13,6 +41,7 @@ function BusStopList() {
 
   const [busStop, setBusStop] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Check screen size for responsive design
@@ -31,7 +60,7 @@ function BusStopList() {
       setLoading(true);
 
       const response = await fetch(
-        `https://backend-vercel-zeta-eight.vercel.app/api/busstops/number/${bus_stop_number}`
+        `https://backend-vercel-zeta-eight.vercel.app/api/tracker/${bus_stop_number}/`
       );
 
       console.log("status:", response.status);
@@ -50,28 +79,168 @@ function BusStopList() {
       message.error('Failed to fetch bus data');
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
   useEffect(() => {
     if (bus_stop_number) {
+      setInitialLoad(true);
       fetchData();
     }
   }, [bus_stop_number]);
 
-  // Loading state
-  if (loading && !busStop) {
+  // Helper function to get minutes display
+  const getMinutesDisplay = (time) => {
+    if (!time || !busStop?.current_time) return null;
+    const minutes = calculateMinutesFromNow(time, busStop.current_time);
+    if (minutes === null) return null;
+    if (minutes === 0) return "Due";
+    if (minutes < 0) return "Arrived";
+    return `${minutes} min`;
+  };
+
+  // Header Skeleton
+  const HeaderSkeleton = () => (
+    <Card 
+      bordered={false}
+      style={{ 
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+      }}
+    >
+      <Space direction={isMobile ? "vertical" : "horizontal"} style={{ width: '100%', justifyContent: 'space-between' }}>
+        <Space align="center">
+          <Skeleton.Avatar active size={48} shape="square" style={{ borderRadius: '12px' }} />
+          <div>
+            <Skeleton.Input active style={{ width: 200, marginBottom: 8 }} />
+            <Skeleton.Input active size="small" style={{ width: 150 }} />
+          </div>
+        </Space>
+        
+        <Skeleton.Button active size={isMobile ? "default" : "large"} style={{ width: 120 }} />
+      </Space>
+
+      {/* Bus Stop Information Cards Skeleton */}
+      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+        <Col xs={24} sm={12}>
+          <Card size="small" style={{ background: '#f8f9fa', borderRadius: '10px' }}>
+            <Space>
+              <Skeleton.Avatar active size="small" shape="circle" />
+              <Skeleton.Input active size="small" style={{ width: 120 }} />
+            </Space>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12}>
+          <Card size="small" style={{ background: '#f8f9fa', borderRadius: '10px' }}>
+            <Space>
+              <Skeleton.Avatar active size="small" shape="circle" />
+              <Skeleton.Input active size="small" style={{ width: 150 }} />
+            </Space>
+          </Card>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  // Service Card Skeleton
+  const ServiceCardSkeleton = () => (
+    <Col xs={24} sm={12} lg={8}>
+      <Card
+        style={{ 
+          borderRadius: '12px',
+          border: '1px solid #f0f0f0'
+        }}
+        bodyStyle={{ padding: '16px' }}
+      >
+        <div style={{ 
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <Skeleton.Button active size="small" style={{ width: 100, borderRadius: '20px' }} />
+        </div>
+
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '16px',
+          width: '100%'
+        }}>
+          {/* First Arrival Skeleton */}
+          <div style={{ 
+            background: '#f8f9fa',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid #f0f0f0'
+          }}>
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Space>
+                <Skeleton.Avatar active size="small" shape="circle" />
+                <Skeleton.Input active size="small" style={{ width: 80 }} />
+              </Space>
+              <Skeleton.Input active size="small" style={{ width: 40, marginLeft: 24 }} />
+            </Space>
+          </div>
+
+          {/* Second Arrival Skeleton */}
+          <div style={{ 
+            background: '#f8f9fa',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid #f0f0f0'
+          }}>
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Space>
+                <Skeleton.Input active size="small" style={{ width: 90 }} />
+              </Space>
+              <Skeleton.Input active size="small" style={{ width: 60, marginLeft: 24 }} />
+            </Space>
+          </div>
+        </div>
+      </Card>
+    </Col>
+  );
+
+  // Services Section Skeleton
+  const ServicesSkeleton = () => (
+    <Card
+      title={
+        <Space>
+          <Skeleton.Avatar active size="small" shape="circle" />
+          <Skeleton.Input active size="small" style={{ width: 100 }} />
+          <Skeleton.Button active size="small" style={{ width: 60, borderRadius: '12px' }} />
+        </Space>
+      }
+      bordered={false}
+      style={{ 
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+      }}
+    >
+      <Row gutter={[16, 16]}>
+        {[1, 2, 3, 4, 5, 6].map((key) => (
+          <ServiceCardSkeleton key={key} />
+        ))}
+      </Row>
+    </Card>
+  );
+
+  // Show full page skeleton only on initial load
+  if (initialLoad && loading) {
     return (
       <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '400px',
-        flexDirection: 'column',
-        gap: '16px'
+        padding: isMobile ? '16px' : '24px',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        minHeight: '100vh',
+        background: '#f0f2f5'
       }}>
-        <Spin size={isMobile ? "default" : "large"} />
-        <Text type="secondary">Loading bus stop information...</Text>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <HeaderSkeleton />
+          <ServicesSkeleton />
+        </Space>
       </div>
     );
   }
@@ -108,7 +277,7 @@ function BusStopList() {
               </div>
               <div>
                 <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
-                  Bus Stop Details
+                  Live Bus Arrival Time
                 </Title>
                 <Text type="secondary">View real-time bus arrival information</Text>
               </div>
@@ -140,9 +309,13 @@ function BusStopList() {
                 <Space>
                   <NumberOutlined style={{ color: '#1890ff' }} />
                   <Text type="secondary">Stop Number:</Text>
-                  <Text strong style={{ fontSize: '16px' }}>
-                    {busStop?.bus_stop_number || bus_stop_number || 'N/A'}
-                  </Text>
+                  {loading ? (
+                    <Skeleton.Input active size="small" style={{ width: 80 }} />
+                  ) : (
+                    <Text strong style={{ fontSize: '16px' }}>
+                      {busStop?.bus_stop_number || bus_stop_number || 'N/A'}
+                    </Text>
+                  )}
                 </Space>
               </Card>
             </Col>
@@ -158,25 +331,41 @@ function BusStopList() {
                 <Space>
                   <EnvironmentOutlined style={{ color: '#52c41a' }} />
                   <Text type="secondary">Stop Name:</Text>
-                  <Text strong style={{ fontSize: '16px' }}>
-                    {busStop?.bus_stop_name || 'N/A'}
-                  </Text>
+                  {loading ? (
+                    <Skeleton.Input active size="small" style={{ width: 120 }} />
+                  ) : (
+                    <Text strong style={{ fontSize: '16px' }}>
+                      {busStop?.bus_stop_name || 'N/A'}
+                    </Text>
+                  )}
                 </Space>
               </Card>
             </Col>
           </Row>
+
+          {/* Current Time Display */}
+          {busStop?.current_time && (
+            <div style={{ marginTop: '16px', textAlign: 'right' }}>
+              <Text type="secondary">
+                Current Time: {busStop.current_time.split('.')[0]}
+              </Text>
+            </div>
+          )}
         </Card>
 
         {/* Services Section */}
-        <Card
+        <Card 
           title={
             <Space>
               <ClockCircleOutlined style={{ color: '#1890ff' }} />
               <span>Bus Services</span>
-              {busStop?.bussservice && (
-                <Tag color="blue" style={{ borderRadius: '12px' }}>
-                  {busStop.bussservice.length} service{busStop.bussservice.length !== 1 ? 's' : ''}
+              {!loading && busStop?.bus_details && (
+                <Tag color="blue">
+                  {busStop.bus_details.length} services
                 </Tag>
+              )}
+              {loading && (
+                <Skeleton.Button active size="small" style={{ width: 80, borderRadius: '12px' }} />
               )}
             </Space>
           }
@@ -188,115 +377,115 @@ function BusStopList() {
         >
           {console.log("bus data in logs = " + JSON.stringify(busStop))}
 
-          {busStop?.bussservice && busStop.bussservice.length > 0 ? (
+          {loading ? (
+            // Show skeletons during refresh
             <Row gutter={[16, 16]}>
-              {busStop.bussservice.map((service) => (
-                <Col xs={24} sm={12} lg={8} key={service.id}>
-                  <Card
-                    hoverable
-                    style={{ 
-                      borderRadius: '12px',
-                      border: '1px solid #f0f0f0',
-                      transition: 'all 0.3s ease'
-                    }}
-                    bodyStyle={{ padding: '16px' }}
-                  >
-                    {/* Service Number Badge */}
-                    <div style={{ 
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '16px'
-                    }}>
-                      <Tag 
-                        color="blue" 
-                        style={{ 
-                          fontSize: '18px',
-                          fontWeight: 'bold',
-                          padding: '4px 16px',
-                          borderRadius: '20px',
-                          border: 'none'
-                        }}
-                      >
-                        Service {service.service_number}
-                      </Tag>
-                      {loading && <Spin size="small" />}
-                    </div>
-
-                    {/* Arrival Times */}
-                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <div style={{ 
-                        background: '#f8f9fa',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: '1px solid #f0f0f0'
-                      }}>
-                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                          <Space>
-                            <ClockCircleOutlined style={{ color: '#52c41a' }} />
-                            <Text type="secondary">First Arrival:</Text>
-                          </Space>
-                          <Text strong style={{ fontSize: '16px', marginLeft: '24px' }}>
-                            {loading ? <Spin size="small" /> : (service.arrival_time || 'N/A')}
-                          </Text>
-                          {service.arrival_time && (
-                            <Tag color="green" style={{ marginLeft: '24px', marginTop: '4px' }}>
-                              Next Bus
-                            </Tag>
-                          )}
-                        </Space>
-                      </div>
-
-                      <div style={{ 
-                        background: '#f8f9fa',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: '1px solid #f0f0f0'
-                      }}>
-                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                          <Space>
-                            <ClockCircleOutlined style={{ color: '#fa8c16' }} />
-                            <Text type="secondary">Second Arrival:</Text>
-                          </Space>
-                          <Text strong style={{ fontSize: '16px', marginLeft: '24px' }}>
-                            {loading ? <Spin size="small" /> : (service.next_arrival_time || 'N/A')}
-                          </Text>
-                          {!service.next_arrival_time && (
-                            <Text type="secondary" style={{ marginLeft: '24px', fontSize: '12px' }}>
-                              No further arrivals scheduled
-                            </Text>
-                          )}
-                        </Space>
-                      </div>
-                    </Space>
-
-                    {/* Divider with time indicator */}
-                    <Divider style={{ margin: '16px 0 8px 0' }}>
-                      <Tag color="default" style={{ fontSize: '11px' }}>
-                        Real-time
-                      </Tag>
-                    </Divider>
-                    
-                    <Text type="secondary" style={{ fontSize: '11px', display: 'block', textAlign: 'center' }}>
-                      Updated just now
-                    </Text>
-                  </Card>
-                </Col>
+              {[1, 2, 3, 4, 5, 6].map((key) => (
+                <ServiceCardSkeleton key={key} />
               ))}
             </Row>
           ) : (
-            <div style={{ padding: '32px 0' }}>
-              {loading ? (
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  alignItems: 'center', 
-                  flexDirection: 'column',
-                  gap: '16px'
-                }}>
-                  <Spin size={isMobile ? "default" : "large"} />
-                  <Text type="secondary">Loading bus services...</Text>
-                </div>
+            <>
+              {busStop?.bus_details && busStop.bus_details.length > 0 ? (
+                <Row gutter={[16, 16]}>
+                  {busStop.bus_details.map((service, index) => {
+                    const firstArrivalMinutes = getMinutesDisplay(service.arrival_time);
+                    const nextArrivalMinutes = getMinutesDisplay(service.next_arrival);
+                    
+                    return (
+                      <Col xs={24} sm={12} lg={8} key={index}>
+                        <Card
+                          hoverable
+                          style={{ 
+                            borderRadius: '12px',
+                            border: '1px solid #f0f0f0',
+                            transition: 'all 0.3s ease'
+                          }}
+                          bodyStyle={{ padding: '16px' }}
+                        >
+                          {/* Service Number Badge */}
+                          <div style={{ 
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '16px'
+                          }}>
+                            <Tag 
+                              color="blue" 
+                              style={{ 
+                                fontSize: '18px',
+                                fontWeight: 'bold',
+                                padding: '4px 16px',
+                                borderRadius: '20px',
+                                border: 'none'
+                              }}
+                            >
+                              Service {service.bus_serviceno}
+                            </Tag>
+                          </div>
+
+                          {/* Arrival Times */}
+                          <div style={{ 
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '16px',
+                            width: '100%'
+                          }}>
+                            {/* First Arrival */}
+                            <div style={{ 
+                              background: '#f8f9fa',
+                              padding: '12px',
+                              borderRadius: '8px',
+                              border: '1px solid #f0f0f0'
+                            }}>
+                              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                                <Space>
+                                  <ClockCircleOutlined style={{ color: '#52c41a' }} />
+                                  <Text type="secondary">First:</Text>
+                                  <Text strong style={{ fontSize: '16px' }}>
+                                    {firstArrivalMinutes || 'N/A'}
+                                  </Text>
+                                </Space>
+                                {service.arrival_time && (
+                                  <Text type="secondary" style={{ fontSize: '12px', marginLeft: '24px' }}>
+                                    ({service.arrival_time.split('.').slice(0, -1).join('.')})
+                                  </Text>
+                                )}
+                              </Space>
+                            </div>
+
+                            {/* Second Arrival */}
+                            <div style={{ 
+                              background: '#f8f9fa',
+                              padding: '12px',
+                              borderRadius: '8px',
+                              border: '1px solid #f0f0f0'
+                            }}>
+                              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                                <Space>
+                                  <Text type="secondary">Second:</Text>
+                                  <Text strong style={{ fontSize: '16px' }}>
+                                    {nextArrivalMinutes || 'N/A'}
+                                  </Text>
+                                </Space>
+                                
+                                {service.next_arrival ? (
+                                  <Text type="secondary" style={{ fontSize: '12px', marginLeft: '24px' }}>
+                                    ({service.next_arrival.split('.').slice(0, -1).join('.')})
+                                  </Text>
+                                ) : (
+                                  <Text type="secondary" style={{ marginLeft: '24px', fontSize: '12px' }}>
+                                    No further arrivals
+                                  </Text>
+                                )}
+                              </Space>
+                            </div>
+                          </div>
+                        </Card>
+                      </Col>
+                    );
+                  })}
+                </Row>
               ) : (
                 <Alert
                   message="No Services Available"
@@ -310,7 +499,7 @@ function BusStopList() {
                   }
                 />
               )}
-            </div>
+            </>
           )}
         </Card>
 
