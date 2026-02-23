@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Spin, Card, Button, Space, Typography, Row, Col, Alert, Tag, Divider, message, Skeleton } from "antd";
 import { ReloadOutlined, EnvironmentOutlined, NumberOutlined, ClockCircleOutlined } from "@ant-design/icons";
-// import "./bus.css";
-// import "./busstop.css";
 
 const { Title, Text } = Typography;
 
@@ -91,60 +89,17 @@ function BusStopList() {
   }, [bus_stop_number]);
 
   // Helper function to get minutes display
-const getMinutesDisplay = (time) => {
-  if (!time || !busStop?.current_time) return null;
-  const minutes = calculateMinutesFromNow(time, busStop.current_time);
-  if (minutes === null) return null;
-  if (minutes === 0) return "Arrived";
-  if (minutes === 1) return "Arr"; // Changed from 1 min to ARR
-  if (minutes < 0) return "Arrived";
-  return `${minutes} min`;
-};
+  const getMinutesDisplay = (time) => {
+    if (!time || !busStop?.current_time) return null;
+    const minutes = calculateMinutesFromNow(time, busStop.current_time);
+    if (minutes === null) return null;
+    if (minutes === 0) return "Arrived";
+    if (minutes === 1) return "Arr";
+    if (minutes < 0) return "Arrived";
+    return `${minutes} min`;
+  };
 
-  // Header Skeleton
-  const HeaderSkeleton = () => (
-    <Card 
-      bordered={false}
-      style={{ 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-      }}
-    >
-      <Space direction={isMobile ? "vertical" : "horizontal"} style={{ width: '100%', justifyContent: 'space-between' }}>
-        <Space align="center">
-          <Skeleton.Avatar active size={48} shape="square" style={{ borderRadius: '12px' }} />
-          <div>
-            <Skeleton.Input active style={{ width: 200, marginBottom: 8 }} />
-            <Skeleton.Input active size="small" style={{ width: 150 }} />
-          </div>
-        </Space>
-        
-        <Skeleton.Button active size={isMobile ? "default" : "large"} style={{ width: 120 }} />
-      </Space>
-
-      {/* Bus Stop Information Cards Skeleton */}
-      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-        <Col xs={24} sm={12}>
-          <Card size="small" style={{ background: '#f8f9fa', borderRadius: '10px' }}>
-            <Space>
-              <Skeleton.Avatar active size="small" shape="circle" />
-              <Skeleton.Input active size="small" style={{ width: 120 }} />
-            </Space>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card size="small" style={{ background: '#f8f9fa', borderRadius: '10px' }}>
-            <Space>
-              <Skeleton.Avatar active size="small" shape="circle" />
-              <Skeleton.Input active size="small" style={{ width: 150 }} />
-            </Space>
-          </Card>
-        </Col>
-      </Row>
-    </Card>
-  );
-
-  // Service Card Skeleton
+  // Service Card Skeleton (only for the bus service cards)
   const ServiceCardSkeleton = () => (
     <Col xs={24} sm={12} lg={8}>
       <Card
@@ -204,48 +159,6 @@ const getMinutesDisplay = (time) => {
     </Col>
   );
 
-  // Services Section Skeleton
-  const ServicesSkeleton = () => (
-    <Card
-      title={
-        <Space>
-          <Skeleton.Avatar active size="small" shape="circle" />
-          <Skeleton.Input active size="small" style={{ width: 100 }} />
-          <Skeleton.Button active size="small" style={{ width: 60, borderRadius: '12px' }} />
-        </Space>
-      }
-      bordered={false}
-      style={{ 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-      }}
-    >
-      <Row gutter={[16, 16]}>
-        {[1, 2, 3, 4, 5, 6].map((key) => (
-          <ServiceCardSkeleton key={key} />
-        ))}
-      </Row>
-    </Card>
-  );
-
-  // Show full page skeleton only on initial load
-  if (initialLoad && loading) {
-    return (
-      <div style={{ 
-        padding: isMobile ? '16px' : '24px',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        minHeight: '100vh',
-        background: '#f0f2f5'
-      }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <HeaderSkeleton />
-          <ServicesSkeleton />
-        </Space>
-      </div>
-    );
-  }
-
   return (
     <div style={{ 
       padding: isMobile ? '16px' : '24px',
@@ -255,7 +168,7 @@ const getMinutesDisplay = (time) => {
       background: '#f0f2f5'
     }}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* Header Card with Bus Stop Info */}
+        {/* Header Card with Bus Stop Info - Always visible */}
         <Card 
           bordered={false}
           style={{ 
@@ -291,73 +204,60 @@ const getMinutesDisplay = (time) => {
               loading={loading}
               size={isMobile ? "middle" : "large"}
               style={{ borderRadius: '8px' }}
-            >
-                
-            </Button>
+            />
           </Space>
 
-          {/* Bus Stop Information Cards */}
-        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-  
-  {/* LEFT CARD */}
-  <Col xs={24} sm={12}>
-    <Card
-      size="small"
-      style={{
-        background: '#f8f9fa',
-        borderRadius: '10px',
-        border: '1px solid #f0f0f0'
-      }}
-    >
-      <Space>
-  <EnvironmentOutlined style={{ color: '#1890ff' }} />
-  <Text type="secondary">Stop -</Text>
+          {/* Bus Stop Information Cards - Always visible */}
+          <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+            {/* LEFT CARD - Bus stop info */}
+            <Col xs={24} sm={12}>
+              <Card
+                size="small"
+                style={{
+                  background: '#f8f9fa',
+                  borderRadius: '10px',
+                  border: '1px solid #f0f0f0'
+                }}
+              >
+                <Space>
+                  <EnvironmentOutlined style={{ color: '#1890ff' }} />
+                  <Text type="secondary">Stop -</Text>
+                  <Text strong style={{ fontSize: '16px' }}>
+                    {`${bus_stop_number || 'N/A'} - ${
+                      !loading && busStop?.bus_stop_name ? busStop.bus_stop_name : 'Loading...'
+                    }`}
+                  </Text>
+                </Space>
+              </Card>
+            </Col>
 
-  <Text strong style={{ fontSize: '16px' }}>
-    {`${busStop?.bus_stop_number || bus_stop_number || 'N/A'} - ${
-      busStop?.bus_stop_name || 'N/A'
-    }`}
-  </Text>
-</Space>
-    </Card>
-  </Col>
-
-  {/* RIGHT CARD */}
-  <Col xs={24} sm={12}>
-  <Card
-    size="small"
-    style={{
-      background: '#f8f9fa',
-      borderRadius: '10px',
-      border: '1px solid #f0f0f0'
-    }}
-  >
-    {loading ? (
-      <Skeleton.Input active size="small" style={{ width: 150 }} />
-    ) : (
-      <Text
-        type="secondary"
-        style={{
-          display: 'block',
-          textAlign: 'left',
-          fontSize: '12px'
-        }}
-      >
-        Last updated: {new Date().toLocaleTimeString()}
-      </Text>
-    )}
-  </Card>
-</Col>
-
-</Row>
-          {/* Current Time Display */}
-          {/* {busStop?.current_time && (
-            <div style={{ marginTop: '16px', textAlign: 'right' }}>
-              <Text type="secondary">
-                Current Time: {busStop.current_time.split('.')[0]}
-              </Text>
-            </div>
-          )} */}
+            {/* RIGHT CARD - Last updated */}
+            <Col xs={24} sm={12}>
+              <Card
+                size="small"
+                style={{
+                  background: '#f8f9fa',
+                  borderRadius: '10px',
+                  border: '1px solid #f0f0f0'
+                }}
+              >
+                {loading && !busStop ? (
+                  <Skeleton.Input active size="small" style={{ width: 150 }} />
+                ) : (
+                  <Text
+                    type="secondary"
+                    style={{
+                      display: 'block',
+                      textAlign: 'left',
+                      fontSize: '12px'
+                    }}
+                  >
+                    Last updated: {new Date().toLocaleTimeString()}
+                  </Text>
+                )}
+              </Card>
+            </Col>
+          </Row>
         </Card>
 
         {/* Services Section */}
@@ -384,8 +284,9 @@ const getMinutesDisplay = (time) => {
         >
           {console.log("bus data in logs = " + JSON.stringify(busStop))}
 
-          {loading ? (
-            // Show skeletons during refresh
+          {/* Show skeletons only when loading AND no data OR during refresh while data exists */}
+          {(loading && !busStop) ? (
+            // Show full skeletons on initial load when no data exists
             <Row gutter={[16, 16]}>
               {[1, 2, 3, 4, 5, 6].map((key) => (
                 <ServiceCardSkeleton key={key} />
@@ -406,7 +307,9 @@ const getMinutesDisplay = (time) => {
                           style={{ 
                             borderRadius: '12px',
                             border: '1px solid #f0f0f0',
-                            transition: 'all 0.3s ease'
+                            transition: 'all 0.3s ease',
+                            opacity: loading ? 0.6 : 1,
+                            pointerEvents: loading ? 'none' : 'auto'
                           }}
                           bodyStyle={{ padding: '16px' }}
                         >
@@ -447,17 +350,11 @@ const getMinutesDisplay = (time) => {
                             }}>
                               <Space direction="vertical" size={4} style={{ width: '100%' }}>
                                 <Space>
-                                  {/* <ClockCircleOutlined style={{ color: '#52c41a' }} /> */}
-                                  <Text type="secondary">ETA 1:</Text>
+                                  <Text type="secondary">ETA1:</Text>
                                   <Text strong style={{ fontSize: '16px' }}>
-                                    {firstArrivalMinutes || 'N/A'}
+                                    {loading ? '...' : (firstArrivalMinutes || 'N/A')}
                                   </Text>
                                 </Space>
-                                {/* {service.arrival_time && (
-                                  <Text type="secondary" style={{ fontSize: '12px', marginLeft: '24px' }}>
-                                    ({service.arrival_time.split('.').slice(0, -1).join('.')})
-                                  </Text>
-                                )} */}
                               </Space>
                             </div>
 
@@ -470,21 +367,11 @@ const getMinutesDisplay = (time) => {
                             }}>
                               <Space direction="vertical" size={4} style={{ width: '100%' }}>
                                 <Space>
-                                  <Text type="secondary">ETA 2:</Text>
+                                  <Text type="secondary">ETA2:</Text>
                                   <Text strong style={{ fontSize: '16px' }}>
-                                    {nextArrivalMinutes || 'N/A'}
+                                    {loading ? '...' : (nextArrivalMinutes || 'N/A')}
                                   </Text>
                                 </Space>
-                                
-                                {/* {service.next_arrival ? (
-                                  <Text type="secondary" style={{ fontSize: '12px', marginLeft: '24px' }}>
-                                    ({service.next_arrival.split('.').slice(0, -1).join('.')})
-                                  </Text>
-                                ) : (
-                                  <Text type="secondary" style={{ marginLeft: '24px', fontSize: '12px' }}>
-                                    No further arrivals
-                                  </Text>
-                                )} */}
                               </Space>
                             </div>
                           </div>
@@ -509,11 +396,6 @@ const getMinutesDisplay = (time) => {
             </>
           )}
         </Card>
-
-        {/* Footer with timestamp */}
-        {/* <Text type="secondary" style={{ display: 'block', textAlign: 'right', fontSize: '12px' }}>
-          Last updated: {new Date().toLocaleTimeString()}
-        </Text> */}
       </Space>
     </div>
   );
