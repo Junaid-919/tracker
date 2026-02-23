@@ -91,14 +91,15 @@ function BusStopList() {
   }, [bus_stop_number]);
 
   // Helper function to get minutes display
-  const getMinutesDisplay = (time) => {
-    if (!time || !busStop?.current_time) return null;
-    const minutes = calculateMinutesFromNow(time, busStop.current_time);
-    if (minutes === null) return null;
-    if (minutes === 0) return "Due";
-    if (minutes < 0) return "Arrived";
-    return `${minutes} min`;
-  };
+const getMinutesDisplay = (time) => {
+  if (!time || !busStop?.current_time) return null;
+  const minutes = calculateMinutesFromNow(time, busStop.current_time);
+  if (minutes === null) return null;
+  if (minutes === 0) return "Arrived";
+  if (minutes === 1) return "Arr"; // Changed from 1 min to ARR
+  if (minutes < 0) return "Arrived";
+  return `${minutes} min`;
+};
 
   // Header Skeleton
   const HeaderSkeleton = () => (
@@ -291,66 +292,72 @@ function BusStopList() {
               size={isMobile ? "middle" : "large"}
               style={{ borderRadius: '8px' }}
             >
-              Refresh Data
+                
             </Button>
           </Space>
 
           {/* Bus Stop Information Cards */}
-          <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-            <Col xs={24} sm={12}>
-              <Card 
-                size="small" 
-                style={{ 
-                  background: '#f8f9fa',
-                  borderRadius: '10px',
-                  border: '1px solid #f0f0f0'
-                }}
-              >
-                <Space>
-                  <NumberOutlined style={{ color: '#1890ff' }} />
-                  <Text type="secondary">Stop Number:</Text>
-                  {loading ? (
-                    <Skeleton.Input active size="small" style={{ width: 80 }} />
-                  ) : (
-                    <Text strong style={{ fontSize: '16px' }}>
-                      {busStop?.bus_stop_number || bus_stop_number || 'N/A'}
-                    </Text>
-                  )}
-                </Space>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Card 
-                size="small" 
-                style={{ 
-                  background: '#f8f9fa',
-                  borderRadius: '10px',
-                  border: '1px solid #f0f0f0'
-                }}
-              >
-                <Space>
-                  <EnvironmentOutlined style={{ color: '#52c41a' }} />
-                  <Text type="secondary">Stop Name:</Text>
-                  {loading ? (
-                    <Skeleton.Input active size="small" style={{ width: 120 }} />
-                  ) : (
-                    <Text strong style={{ fontSize: '16px' }}>
-                      {busStop?.bus_stop_name || 'N/A'}
-                    </Text>
-                  )}
-                </Space>
-              </Card>
-            </Col>
-          </Row>
+        <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+  
+  {/* LEFT CARD */}
+  <Col xs={24} sm={12}>
+    <Card
+      size="small"
+      style={{
+        background: '#f8f9fa',
+        borderRadius: '10px',
+        border: '1px solid #f0f0f0'
+      }}
+    >
+      <Space>
+  <EnvironmentOutlined style={{ color: '#1890ff' }} />
+  <Text type="secondary">Stop -</Text>
 
+  <Text strong style={{ fontSize: '16px' }}>
+    {`${busStop?.bus_stop_number || bus_stop_number || 'N/A'} - ${
+      busStop?.bus_stop_name || 'N/A'
+    }`}
+  </Text>
+</Space>
+    </Card>
+  </Col>
+
+  {/* RIGHT CARD */}
+  <Col xs={24} sm={12}>
+  <Card
+    size="small"
+    style={{
+      background: '#f8f9fa',
+      borderRadius: '10px',
+      border: '1px solid #f0f0f0'
+    }}
+  >
+    {loading ? (
+      <Skeleton.Input active size="small" style={{ width: 150 }} />
+    ) : (
+      <Text
+        type="secondary"
+        style={{
+          display: 'block',
+          textAlign: 'left',
+          fontSize: '12px'
+        }}
+      >
+        Last updated: {new Date().toLocaleTimeString()}
+      </Text>
+    )}
+  </Card>
+</Col>
+
+</Row>
           {/* Current Time Display */}
-          {busStop?.current_time && (
+          {/* {busStop?.current_time && (
             <div style={{ marginTop: '16px', textAlign: 'right' }}>
               <Text type="secondary">
                 Current Time: {busStop.current_time.split('.')[0]}
               </Text>
             </div>
-          )}
+          )} */}
         </Card>
 
         {/* Services Section */}
@@ -440,17 +447,17 @@ function BusStopList() {
                             }}>
                               <Space direction="vertical" size={4} style={{ width: '100%' }}>
                                 <Space>
-                                  <ClockCircleOutlined style={{ color: '#52c41a' }} />
-                                  <Text type="secondary">First:</Text>
+                                  {/* <ClockCircleOutlined style={{ color: '#52c41a' }} /> */}
+                                  <Text type="secondary">ETA 1:</Text>
                                   <Text strong style={{ fontSize: '16px' }}>
                                     {firstArrivalMinutes || 'N/A'}
                                   </Text>
                                 </Space>
-                                {service.arrival_time && (
+                                {/* {service.arrival_time && (
                                   <Text type="secondary" style={{ fontSize: '12px', marginLeft: '24px' }}>
                                     ({service.arrival_time.split('.').slice(0, -1).join('.')})
                                   </Text>
-                                )}
+                                )} */}
                               </Space>
                             </div>
 
@@ -463,13 +470,13 @@ function BusStopList() {
                             }}>
                               <Space direction="vertical" size={4} style={{ width: '100%' }}>
                                 <Space>
-                                  <Text type="secondary">Second:</Text>
+                                  <Text type="secondary">ETA 2:</Text>
                                   <Text strong style={{ fontSize: '16px' }}>
                                     {nextArrivalMinutes || 'N/A'}
                                   </Text>
                                 </Space>
                                 
-                                {service.next_arrival ? (
+                                {/* {service.next_arrival ? (
                                   <Text type="secondary" style={{ fontSize: '12px', marginLeft: '24px' }}>
                                     ({service.next_arrival.split('.').slice(0, -1).join('.')})
                                   </Text>
@@ -477,7 +484,7 @@ function BusStopList() {
                                   <Text type="secondary" style={{ marginLeft: '24px', fontSize: '12px' }}>
                                     No further arrivals
                                   </Text>
-                                )}
+                                )} */}
                               </Space>
                             </div>
                           </div>
@@ -504,9 +511,9 @@ function BusStopList() {
         </Card>
 
         {/* Footer with timestamp */}
-        <Text type="secondary" style={{ display: 'block', textAlign: 'right', fontSize: '12px' }}>
+        {/* <Text type="secondary" style={{ display: 'block', textAlign: 'right', fontSize: '12px' }}>
           Last updated: {new Date().toLocaleTimeString()}
-        </Text>
+        </Text> */}
       </Space>
     </div>
   );
