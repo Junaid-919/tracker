@@ -92,7 +92,7 @@ function BusStopScreen() {
       ),
     },
     {
-      title: 'Arrival Time',
+      title: 'Arrival Time (min)',
       dataIndex: 'arrival_time',
       key: 'arrival_time',
       render: (text, record) => {
@@ -103,20 +103,20 @@ function BusStopScreen() {
           <Space direction="vertical" size={2}>
             <Space>
               <span style={{ fontSize: '15px', fontWeight: 500 }}>{displayValue}</span>
-              {minutes !== null && minutes > 0 && <Tag color="green">min</Tag>}
-              {minutes === 0 && <Tag color="orange">ARR</Tag>}
+              {/* {minutes !== null && minutes > 0 && <Tag color="green">min</Tag>} */}
+              {/* {minutes === 0 && <Tag color="orange">ARR</Tag>} */}
             </Space>
-            {text && (
+            {/* {text && (
               <Text type="secondary" style={{ fontSize: '11px' }}>
                 {formatTimeDisplay(text)}
               </Text>
-            )}
+            )} */}
           </Space>
         );
       },
     },
     {
-      title: 'Next Arrival',
+      title: 'Next Arrival (min)',
       dataIndex: 'next_arrival',
       key: 'next_arrival',
       render: (text, record) => {
@@ -131,12 +131,12 @@ function BusStopScreen() {
           <Space direction="vertical" size={2}>
             <Space>
               <span style={{ fontSize: '15px' }}>{displayValue}</span>
-              {minutes !== null && minutes > 0 && <Tag color="green">min</Tag>}
+              {/* {minutes !== null && minutes > 0 && <Tag color="green">min</Tag>} */}
               {minutes === 0 && <Tag color="orange">ARR</Tag>}
             </Space>
-            <Text type="secondary" style={{ fontSize: '11px' }}>
+            {/* <Text type="secondary" style={{ fontSize: '11px' }}>
               {formatTimeDisplay(text)}
-            </Text>
+            </Text> */}
           </Space>
         );
       },
@@ -298,14 +298,14 @@ function BusStopScreen() {
               <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
                 Live Bus Arrival Time
               </Title>
-              {!loading && getStopName() && (
+              {/* {!loading && getStopName() && (
                 <Tag color="purple" style={{ marginLeft: '8px' }}>
                   {getStopName()}
                 </Tag>
               )}
               {loading && !busStop && (
                 <Skeleton.Input active size="small" style={{ width: 120, marginLeft: '8px' }} />
-              )}
+              )} */}
             </Space>
             
             <Button 
@@ -315,7 +315,7 @@ function BusStopScreen() {
               size={isMobile ? "middle" : "large"}
               loading={loading}
             >
-              Refresh Data
+            
             </Button>
           </Space>
 
@@ -328,8 +328,14 @@ function BusStopScreen() {
             <Card size="small" style={{ background: '#f5f5f5' }}>
               <Space>
                 <NumberOutlined style={{ color: '#1890ff' }} />
-                <Text type="secondary">Stop Number:</Text>
+                <Text type="secondary">Stop - </Text>
                 <Text strong>{bus_stop_number}</Text>
+                 {!loading && getStopName() && (
+          <>
+            <Text type="secondary" style={{ marginLeft: '8px' }}>-</Text>
+            <Text strong>{getStopName()}</Text>
+          </>
+        )}
               </Space>
             </Card>
             
@@ -338,8 +344,8 @@ function BusStopScreen() {
               <Card size="small" style={{ background: '#f5f5f5' }}>
                 <Space>
                   <ClockCircleOutlined style={{ color: '#52c41a' }} />
-                  <Text type="secondary">Current Time:</Text>
-                  <Text strong>{getCurrentTime()}</Text>
+                  <Text type="secondary">Last Update: {lastUpdated.toLocaleTimeString()}</Text>
+                  {/* <Text strong>{getCurrentTime()}</Text> */}
                 </Space>
               </Card>
             )}
@@ -347,19 +353,7 @@ function BusStopScreen() {
         </Card>
 
         <Card 
-          title={
-            <Space>
-              <span>Bus Services</span>
-              {!loading && busStop && (
-                <Tag color="blue">
-                  {getServiceCount()} services
-                </Tag>
-              )}
-              {loading && !busStop && (
-                <Skeleton.Input active size="small" style={{ width: 80 }} />
-              )}
-            </Space>
-          }
+        
           variant="borderless"
           style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
         >
@@ -385,11 +379,11 @@ function BusStopScreen() {
           />
         </Card>
 
-        {lastUpdated && (
+        {/* {lastUpdated && (
           <Text type="secondary" style={{ display: 'block', textAlign: 'right' }}>
             Last updated: {lastUpdated.toLocaleTimeString()}
           </Text>
-        )}
+        )} */}
       </Space>
     </div>
   );
