@@ -80,68 +80,74 @@ function BusStopScreen() {
     return calculateMinutesFromNow(time, busStop.current_time);
   };
 
-  const columns = [
-    {
-      title: 'Service Number',
-      dataIndex: 'bus_serviceno',
-      key: 'bus_serviceno',
-      render: (text) => (
+ // Modify your columns to check for skeleton data
+const columns = [
+  {
+    title: 'Service Number',
+    dataIndex: 'bus_serviceno',
+    key: 'bus_serviceno',
+    render: (text, record) => {
+      // Check if this is a skeleton row
+      if (record.key?.toString().startsWith('skeleton-')) {
+        return <Skeleton.Input active size="small" style={{ width: 80 }} />;
+      }
+      return (
         <Tag color="blue" style={{ fontSize: '16px', fontWeight: 'bold', padding: '4px 12px' }}>
           {text || 'N/A'}
         </Tag>
-      ),
+      );
     },
-    {
-      title: 'Arrival Time (min)',
-      dataIndex: 'arrival_time',
-      key: 'arrival_time',
-      render: (text, record) => {
-        const minutes = getMinutesForTime(text);
-        const displayValue = formatMinutesDisplay(minutes);
-        
-        return (
-          <Space direction="vertical" size={2}>
-            <Space>
-              <span style={{ fontSize: '15px', fontWeight: 500 }}>{displayValue}</span>
-              {/* {minutes !== null && minutes > 0 && <Tag color="green">min</Tag>} */}
-              {/* {minutes === 0 && <Tag color="orange">ARR</Tag>} */}
-            </Space>
-            {/* {text && (
-              <Text type="secondary" style={{ fontSize: '11px' }}>
-                {formatTimeDisplay(text)}
-              </Text>
-            )} */}
+  },
+  {
+    title: 'Arrival Time (min)',
+    dataIndex: 'arrival_time',
+    key: 'arrival_time',
+    render: (text, record) => {
+      // Check if this is a skeleton row
+      if (record.key?.toString().startsWith('skeleton-')) {
+        return <Skeleton.Input active size="small" style={{ width: 120 }} />;
+      }
+      
+      const minutes = getMinutesForTime(text);
+      const displayValue = formatMinutesDisplay(minutes);
+      
+      return (
+        <Space direction="vertical" size={2}>
+          <Space>
+            <span style={{ fontSize: '15px', fontWeight: 500 }}>{displayValue}</span>
           </Space>
-        );
-      },
+        </Space>
+      );
     },
-    {
-      title: 'Next Arrival (min)',
-      dataIndex: 'next_arrival',
-      key: 'next_arrival',
-      render: (text, record) => {
-        if (!text) {
-          return <Text type="secondary">No scheduled arrival</Text>;
-        }
-        
-        const minutes = getMinutesForTime(text);
-        const displayValue = formatMinutesDisplay(minutes);
-        
-        return (
-          <Space direction="vertical" size={2}>
-            <Space>
-              <span style={{ fontSize: '15px' }}>{displayValue}</span>
-              {/* {minutes !== null && minutes > 0 && <Tag color="green">min</Tag>} */}
-              {minutes === 0 && <Tag color="orange">ARR</Tag>}
-            </Space>
-            {/* <Text type="secondary" style={{ fontSize: '11px' }}>
-              {formatTimeDisplay(text)}
-            </Text> */}
+  },
+  {
+    title: 'Next Arrival (min)',
+    dataIndex: 'next_arrival',
+    key: 'next_arrival',
+    render: (text, record) => {
+      // Check if this is a skeleton row
+      if (record.key?.toString().startsWith('skeleton-')) {
+        return <Skeleton.Input active size="small" style={{ width: 150 }} />;
+      }
+      
+      if (!text) {
+        return <Text type="secondary">No scheduled arrival</Text>;
+      }
+      
+      const minutes = getMinutesForTime(text);
+      const displayValue = formatMinutesDisplay(minutes);
+      
+      return (
+        <Space direction="vertical" size={2}>
+          <Space>
+            <span style={{ fontSize: '15px' }}>{displayValue}</span>
+            {minutes === 0 && <Tag color="orange">ARR</Tag>}
           </Space>
-        );
-      },
+        </Space>
+      );
     },
-  ];
+  },
+];
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -218,25 +224,25 @@ function BusStopScreen() {
   };
 
   // Determine what data to show in table
-  const tableData = () => {
-    // Show skeleton only during initial load (loading true AND no data)
-    if (loading && !busStop) {
-      return getSkeletonData();
+const tableData = () => {
+  // Show skeleton during loading state (whether we have data or not)
+  if (loading) {
+    return getSkeletonData();
+  }
+  
+  // Show actual data if we have it and not loading
+  if (busStop) {
+    const services = getBusServices();
+    if (Array.isArray(services)) {
+      return services.map((service, index) => ({
+        ...service,
+        key: service.id || service.bus_serviceno || index,
+      }));
     }
-    
-    // Show actual data if we have it
-    if (busStop) {
-      const services = getBusServices();
-      if (Array.isArray(services)) {
-        return services.map((service, index) => ({
-          ...service,
-          key: service.id || service.bus_serviceno || index,
-        }));
-      }
-    }
-    
-    return [];
-  };
+  }
+  
+  return [];
+};
 
   // Get the count of services
   const getServiceCount = () => {
